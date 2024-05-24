@@ -42,8 +42,6 @@ def init_penalty_mat(x, y, gap_penalty=-1):
         penalty += gap_penalty
     return mat
 
-mat = init_penalty_mat(x, y, -5)
-
 
 def add_penalty(mat, x, y):
     for i in range(1, len(x) + 1):
@@ -61,7 +59,9 @@ def add_penalty(mat, x, y):
                     mat[i][j] += prev_col -1
                 elif prev_ij > prev_row and prev_ij > prev_col:
                     mat[i][j] += prev_ij -1
-        
     return mat
+
+
+mat = init_penalty_mat(x, y, -5)
 mat = add_penalty(mat, x, y)
 pprint(mat)
