@@ -1,3 +1,5 @@
+import sys
+import csv
 # Author: Zachery Linscott
 # Sequence alignment
 # Pipes indicate matches, dashes indicate misses/gaps
@@ -62,6 +64,41 @@ def add_penalty(mat, x, y):
     return mat
 
 
-mat = init_penalty_mat(x, y, -5)
-mat = add_penalty(mat, x, y)
-pprint(mat)
+# mat = init_penalty_mat(x, y, -5)
+# mat = add_penalty(mat, x, y)
+# pprint(mat)
+
+
+def main():
+    align_types = ["global", "local", "semiglobal", "affine"]
+    seq1 = []
+    seq2 = []
+    sub_mat = []
+
+    # input1, input2 = sys.argv[1], sys.argv[2]
+    seq_file1 = input("Enter the full path of the first sequence file: ")
+    seq_file2 = input("Enter the full path of the second sequence file: ")
+    sub_mat_f = input("Enter the full path of the sub matrix file: ")
+    align_type = input(
+        "Enter the alignment type ({}, {}, {}, or {}): "
+        .format(align_types[0], align_types[1], align_types[2], align_types[3])
+    )
+    gap_penalty = input("Enter the gap penalty: ")
+
+    with open(seq_file1, 'r', encoding='utf-8') as f1:
+        seq1 = f1.readlines()[1]
+
+    with open(seq_file2, 'r', encoding='utf-8') as f2:
+        seq2 = f2.readlines()[1]
+
+    with open(sub_mat_f, 'r', encoding='utf-8') as sub_mat_f:
+        read = csv.reader(sub_mat_f)
+        [sub_mat.append(row) for row in read]
+        sub_mat.pop(0) #discard first row
+
+    print(seq1, seq2, sub_mat)
+    # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
+
+
+if __name__ == "__main__":
+    main()
