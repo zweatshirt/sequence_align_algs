@@ -99,7 +99,7 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
                 mat[i][j] = optimal
 
     if align_type == 'semiglobal':
-        calc_max_end()
+        calc_max_end(mat)
 
     return mat
 
