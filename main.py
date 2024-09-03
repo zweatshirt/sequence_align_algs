@@ -99,16 +99,19 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
                 mat[i][j] = optimal
 
     if align_type == 'semiglobal':
-        end_col_sum = 0
-        end_row_sum = 0
-        for i in range(len(mat)):
-            end_col_sum += mat[i][-1]
-        for j in mat[-1]:
-            end_row_sum += j
-        print(max(end_col_sum, end_row_sum))
-
+        calc_max_end()
 
     return mat
+
+# helper to alignment function in cases of semiglobal alignment
+def calc_max_end(mat):
+    end_col_sum = 0
+    end_row_sum = 0
+    for i in range(len(mat)):
+        end_col_sum += mat[i][-1]
+    for j in mat[-1]:
+        end_row_sum += j
+    print(max(end_col_sum, end_row_sum))
 
 
 def main():
