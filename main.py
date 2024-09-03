@@ -114,19 +114,35 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
                 mat[i][j] = [optimal, dir]
     return mat
 
-def find_optimal_alignment(mat):
+def find_optimal_alignment(mat, traceback_loc, align_type='global'):
     pass
 
-# helper to alignment function in cases of semiglobal alignment
+# returns start location for semiglobal matrix
 def calc_max_end(mat):
     # calculate max ith and max jth values to find starting location for backtracking
-    end_col_sum = 0
-    end_row_sum = 0
-    for i in range(len(mat)):
-        end_col_sum += mat[i][-1]
-    for j in mat[-1]:
-        end_row_sum += j
-    print(max(end_col_sum, end_row_sum))
+    end_col_opt = 0
+    end_row_opt = 0
+    last_col = [row[-1] for row in mat[1:]]
+    last_row = mat[-1][1:]
+    print(last_col)
+    print(last_row)
+    for i in last_col: 
+        if i[0] > end_col_opt:
+            end_col_opt = i[0]
+
+    for j in last_row:
+        if j[0] > end_row_opt:
+            end_row_opt = j[0]
+
+    # fix
+    max_of_row_col = max(mat[end_col_opt][len(mat) - 1], mat[len(last_col) - 1][end_row_opt])
+
+    if max_of_row_col == mat[end_col_opt]:
+        return [end_col_opt, len(mat) - 1] # i, j pair
+    
+    if max_of_row_col == mat[end_row_opt]:
+        return [mat[-1], end_row_opt] # i, j pair
+    pass
 
 
 def main():
@@ -170,22 +186,11 @@ def main():
     sub_mat = [[4, -2, 1, -2], [-2, 4, -2, 1], [1, -2, 4, -2], [-2, 1, -2, 4]]
     sub_mat = init_sub_mat('ACGT', sub_mat)
 
-    mat = init_penalty_mat(HW1_str_2, HW1_str_1, gap_penalty=-5, align_type='local')
-    mat_global = align_with_sub(mat, HW1_str_2, HW1_str_1, sub_mat, penalty=-5, align_type='local')
-    pprint(mat_global)
-    # will be line 1 and other lines as list in the future for arguments
-
-    # mat = init_penalty_mat(HW1_str_2, HW1_str_1, gap_penalty=-5, align_type='semiglobal')
-    # pprint(sub_mat)
-    # mat_semiglobal = align_with_sub(mat, HW_lst_2, HW_lst_1, sub_mat, penalty=-5, align_type='semiglobal')
-    # pprint(mat_semiglobal)
-    # semiglobal_max_end = calc_max_end(mat_semiglobal)
-    # print(semiglobal_max_end)
-
-    # mat = init_penalty_mat(HW1_str_2, HW1_str_1, align_type='local')    
-    # mat_local = align_with_sub(mat, HW_lst_2, HW_lst_1, sub_mat, penalty=-5, align_type='local')
-    # print("Local alignment:\n")
-    # pprint(mat_local)
+    mat = init_penalty_mat(HW1_str_2, HW1_str_1, gap_penalty=-5, align_type='semiglobal')
+    mat_semi = align_with_sub(mat, HW1_str_2, HW1_str_1, sub_mat, penalty=-5, align_type='semiglobal')
+    pprint(mat_semi)
+    print(calc_max_end(mat_semi))
+  
 
 if __name__ == "__main__":
     main()
