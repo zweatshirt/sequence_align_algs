@@ -2,9 +2,7 @@ import sys
 import csv
 # Author: Zachery Linscott
 # 9/2/2024
-# Sequence alignment
-# Pipes | indicate matches, underscore _ indicate misses/gaps
-
+# Global, local, and semiglobal sequence alignment project.
 # The alignment problem takes a 2 dimension solution
 
 
@@ -13,7 +11,12 @@ def pprint(mat):
     print('\n')
 
 
-# could be faster
+# initializes the penalty matrix.
+# parameters:
+# x is the first string for the comparison.
+# y is the second string for the comparison.
+# gap penalty can be chosen, or defaults to -1.
+# align type can be chosen but defaults to global.
 def init_penalty_mat(x, y, gap_penalty=-1, align_type='global'):
     mat = [[0] * (len(y) + 1) for i in range(len(x) + 1)]
 
@@ -32,39 +35,25 @@ def init_penalty_mat(x, y, gap_penalty=-1, align_type='global'):
     
     return mat
 
-# x here is the submatrix strings
+# initializes sub matrix given the string of chars and their sub values
 def init_sub_mat(x, sub_from_file):
     # x will be line 1 [Characters]
     # sub_from_file will be everything from line 2 [Sub values]
+
+    # initialize matrix of 0s
     mat = [[0] * (len(x) + 1) for i in range(len(x) + 1)]
 
+    # populate matrix's 0th row and column with the chars
     for i in range(1, len(mat)):
         mat[i][0] = mat[0][i] = x[i - 1]
     
     # will need to be modified
     # starts on second line of file
+
+    # populate the matrix with its sub values 
     for i in range(len(sub_from_file)):
         for j in range(len(sub_from_file)):
             mat[i + 1][j + 1] = sub_from_file[i][j]
-    return mat
-
-# needs updating
-def align(mat, x, y, penalty, match):
-    for i in range(1, len(x) + 1):
-        for j in range(1, len(y) + 1):
-            prev_ij = mat[i - 1][j - 1]
-            prev_row = mat[i - 1][j]
-            prev_col = mat[i][j - 1]
-
-            if x[i - 1] == y[j - 1]:
-                mat[i][j] += prev_ij + match
-            else:
-                if prev_row > prev_col and prev_row > prev_ij:
-                    mat[i][j] += prev_row + penalty
-                elif prev_col > prev_row and prev_col > prev_ij:
-                    mat[i][j] += prev_col + penalty
-                elif prev_ij > prev_row and prev_ij > prev_col:
-                    mat[i][j] += prev_ij + penalty
     return mat
 
 
@@ -74,6 +63,8 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
 
     for i in range(1, len(x) + 1):
         for j in range(1, len(y) + 1):
+
+            # grab prior vals to determine optimum for i,j
             prev_ij = mat[i - 1][j - 1] # diagonal
             prev_row = mat[i - 1][j] # vertical
             prev_col = mat[i][j - 1] # horizontal
@@ -85,18 +76,23 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
             sub_mat_row_loc = sub_mat_chars.index(row_char)
             sub_mat_col_loc = sub_mat_chars.index(col_char)
             sub_mat_score = sub_mat[sub_mat_row_loc][sub_mat_col_loc]
-            dir = '' # direction of optimal choice
+            dir = '' # initalize string for direction of optimal choice
 
+            # the matrix is initialized with 0s but later populated with lists
+            # to store both the value and opt choice dir string
+            #  due to this, both cases have to be managed
             if isinstance(prev_ij, int):
-                diag_sub = prev_ij + sub_mat_score
+                diag_sub = prev_ij + sub_mat_score # [i-1,i-j] val + sub matrix val
             else: diag_sub = prev_ij[0] + sub_mat_score
             if isinstance(prev_row, int):            
-                vertical_move =  prev_row + penalty
+                vertical_move =  prev_row + penalty # [i - 1, j] val + penalty val
             else: vertical_move = prev_row[0] + penalty
             if isinstance(prev_col, int):
-                horiz_move = prev_col + penalty
+                horiz_move = prev_col + penalty # [i, j - 1] val + penalty val
             else: horiz_move = prev_col[0] + penalty
 
+            # Note to self: refactor if statements here
+            # the algorithm is the same for global and semiglobal here
             if align_type == 'global' or align_type == 'semiglobal':
                 optimal = max(diag_sub, vertical_move, horiz_move)
                 if optimal == diag_sub: dir += 'd'
@@ -104,7 +100,7 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
                 if optimal == horiz_move: dir += 'h'
                 mat[i][j] = [optimal, dir]
             
-            # may need to change
+            # optimum val for local can't be negative
             if align_type == 'local':
                 optimal = max(diag_sub, vertical_move, horiz_move, 0)
                 if optimal == diag_sub: dir += 'd'
@@ -117,32 +113,50 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
 def find_optimal_alignment(mat, traceback_loc, align_type='global'):
     pass
 
-# returns start location for semiglobal matrix
-def calc_max_end(mat):
-    # calculate max ith and max jth values to find starting location for backtracking
+# returns start location for semiglobal matrix backtracing
+def semi_traceback_start(mat):
+
+    # initialize optimum value and optimum val idx to 0
     end_col_opt = 0
     end_row_opt = 0
+    end_row_opt_idx = 0
+    end_col_opt_idx = 0
+
+    # grab last row and column from mat
     last_col = [row[-1] for row in mat[1:]]
     last_row = mat[-1][1:]
-    print(last_col)
-    print(last_row)
-    for i in last_col: 
+
+    # find optimum value in last column
+    for idx, i in enumerate(last_col): 
         if i[0] > end_col_opt:
             end_col_opt = i[0]
+            end_col_opt_idx = idx
 
-    for j in last_row:
+    # fin optimum value in last row
+    for idx, j in enumerate(last_row):
         if j[0] > end_row_opt:
             end_row_opt = j[0]
+            end_row_opt_idx = idx
 
-    # fix
-    max_of_row_col = max(mat[end_col_opt][len(mat) - 1], mat[len(last_col) - 1][end_row_opt])
+    # just a print statement because I was curious.
+    # True in the case of mat[n][m] being the opt, or if they happen to match
+    if end_col_opt == end_row_opt:
+        print("Max val of last row is the same as the max val of the last col: {}".format(end_col_opt))
 
-    if max_of_row_col == mat[end_col_opt]:
-        return [end_col_opt, len(mat) - 1] # i, j pair
+    # get max of max of last row and max of last column
+    max_of_row_col = max(end_col_opt, end_row_opt)
+
+    # if the max is from the last column return the relative i,jth idx
+    if max_of_row_col == last_col[end_col_opt_idx][0]:
+        print("Last col has opt at i: {} j: {}".format(end_col_opt_idx, len(mat[0])))
+        return [end_col_opt_idx, len(mat[0])] # i, j pair
     
-    if max_of_row_col == mat[end_row_opt]:
-        return [mat[-1], end_row_opt] # i, j pair
-    pass
+    # if the max is from the last row return the relative i,jth idx
+    if max_of_row_col == last_row[end_row_opt_idx][0]:
+        print("Last row has opt at i: {} j: {}".format(len(mat) -1, end_row_opt_idx))
+        return [len(mat) - 1, end_row_opt_idx] # i, j pair
+    
+
 
 
 def main():
@@ -187,9 +201,9 @@ def main():
     sub_mat = init_sub_mat('ACGT', sub_mat)
 
     mat = init_penalty_mat(HW1_str_2, HW1_str_1, gap_penalty=-5, align_type='semiglobal')
-    mat_semi = align_with_sub(mat, HW1_str_2, HW1_str_1, sub_mat, penalty=-5, align_type='semiglobal')
-    pprint(mat_semi)
-    print(calc_max_end(mat_semi))
+    mat = align_with_sub(mat, HW1_str_2, HW1_str_1, sub_mat, penalty=-5, align_type='semiglobal')
+    pprint(mat)
+    print(semi_traceback_start(mat))
   
 
 if __name__ == "__main__":
