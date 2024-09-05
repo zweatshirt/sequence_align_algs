@@ -3,9 +3,11 @@ import csv
 # Author: Zachery Linscott
 # 9/2/2024
 # Global, local, and semiglobal sequence alignment project.
-# The alignment problem takes a 2 dimension solution
 
 
+# This is just to print the matrices somewhat nicely.
+# parameter:
+# mat - any m x n matrix
 def pprint(mat):
     print('\n\n'.join(['\t'.join([str(col) for col in row[1:]]) for row in mat[1:]]))
     print('\n')
@@ -13,10 +15,10 @@ def pprint(mat):
 
 # initializes the penalty matrix.
 # parameters:
-# x is the first string for the comparison.
-# y is the second string for the comparison.
-# gap penalty can be chosen, or defaults to -1.
-# align type can be chosen but defaults to global.
+# x - the first string for the comparison.
+# y - the second string for the comparison.
+# gap_penalty - penalty val that can be chosen, or defaults to -1.
+# align_type - which alignment algorithm: global, local, semiglobal.
 def init_penalty_mat(x, y, gap_penalty=-1, align_type='global'):
     mat = [[0] * (len(y) + 1) for i in range(len(x) + 1)]
 
@@ -35,7 +37,11 @@ def init_penalty_mat(x, y, gap_penalty=-1, align_type='global'):
     
     return mat
 
+
 # initializes sub matrix given the string of chars and their sub values
+# parameters:
+# x - string of characters from file for sub matrix
+# sub_from_file - substitution matrix from file (an n x m matrix)
 def init_sub_mat(x, sub_from_file):
     # x will be line 1 [Characters]
     # sub_from_file will be everything from line 2 [Sub values]
@@ -57,6 +63,16 @@ def init_sub_mat(x, sub_from_file):
     return mat
 
 
+# fills in the penalty matrix
+# optimum values depend on whether the alignment type is:
+# global, local, semiglobal
+# parameters:
+# mat - an n x m 0 filled penalty matrix that has been initialized by init_penalty_mat()
+# x - string 1 to compare
+# y - string 2 to compare
+# sub_mat - an n x m matrix initialized by init_sub_mat()
+# penalty - penalty score
+# align_type - which alignment algorithm: global, local, semiglobal 
 def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
     # grab characters of the sub matrix for accessing later
     sub_mat_chars = [char for char in sub_mat[0]]
@@ -79,8 +95,8 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
             dir = '' # initalize string for direction of optimal choice
 
             # the matrix is initialized with 0s but later populated with lists
-            # to store both the value and opt choice dir string
-            #  due to this, both cases have to be managed
+            # to store both opt value and opt direction string.
+            # due to this, both cases have to be managed.
             if isinstance(prev_ij, int):
                 diag_sub = prev_ij + sub_mat_score # [i-1,i-j] val + sub matrix val
             else: diag_sub = prev_ij[0] + sub_mat_score
@@ -110,13 +126,80 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
                 mat[i][j] = [optimal, dir]
     return mat
 
-def find_optimal_alignment(mat, traceback_loc, align_type='global'):
-    pass
+
+def opt_align(mat, i=None, j=None, x='', y='', x_aligned=[], y_aligned=[], align_type='global', iter=0):
+    # fix to recursively go over values with the d, v, h (not gap penalty vals itself)
+    
+    if iter == 0:
+        if align_type == 'global':
+            i = len(x)
+            j = len(y)
+        if align_type == 'semiglobal':
+            i, j = semi_traceback_start(mat) # test this case
+        if align_type == 'local':
+            i, j = local_traceback_start(mat)
+        mat=[row[1:] for row in mat[1:]]
+
+    if i == 0 and j == 0:
+
+        # May or may not work for multiple cases, needs to be tested further
+        if align_type == 'local' or align_type == 'semiglobal':
+            while x_aligned[-1] == '_' or y_aligned[-1] == '_':
+                x_aligned = x_aligned[:-1]
+                y_aligned = y_aligned[:-1]
+
+        print(x_aligned, y_aligned)
+        # base case works for global
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+    
+
+    if i == 0 and j > 0:
+        x_aligned.append('_')
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
+
+    if j == 0 and i > 0:
+        x_aligned.append(x[i - 1])
+        y_aligned.append('_')
+        return opt_align(mat, i - 1, j, x, y, x_aligned, y_aligned, align_type, iter + 1)
+
+    elem = mat[i - 1][j - 1]
+    # add both chars
+    if i > 0 and j > 0 and 'd' in elem[1]:
+        x_aligned.append(x[i - 1])
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i - 1, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
+    if i > 0 and 'h' in elem[1]:
+        x_aligned.append('_')
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
+
+    if j > 0 and 'v' in elem[1]:
+        x_aligned.append(x[i - 1])
+        y_aligned.append('_')
+        return opt_align(mat, i - 1, j, x, y, x_aligned, y_aligned, align_type, iter + 1)
+    
+
+def local_traceback_start(mat):
+    max_elem = 0
+    max_ij = []
+    for i in range(len(mat)):
+        for j in range(i):
+            if isinstance(mat[i][j], list):
+                elem = mat[i][j][0]
+            else: elem = mat[i][j]
+
+            if elem > max_elem:
+                max_elem = elem
+                max_ij = [i, j]
+    return max_ij
 
 # returns start location for semiglobal matrix backtracing
+# parameter:
+# mat - specifically an m x n penalty matrix that is semiglobal and already filled.
 def semi_traceback_start(mat):
 
-    # initialize optimum value and optimum val idx to 0
+    # initialize optimum val and optimum val idx to 0
     end_col_opt = 0
     end_row_opt = 0
     end_row_opt_idx = 0
@@ -132,7 +215,7 @@ def semi_traceback_start(mat):
             end_col_opt = i[0]
             end_col_opt_idx = idx
 
-    # fin optimum value in last row
+    # find optimum value in last row
     for idx, j in enumerate(last_row):
         if j[0] > end_row_opt:
             end_row_opt = j[0]
@@ -154,7 +237,7 @@ def semi_traceback_start(mat):
     # if the max is from the last row return the relative i,jth idx
     if max_of_row_col == last_row[end_row_opt_idx][0]:
         print("Last row has opt at i: {} j: {}".format(len(mat) -1, end_row_opt_idx))
-        return [len(mat) - 1, end_row_opt_idx] # i, j pair
+        return (len(mat) - 1, end_row_opt_idx) # i, j pair
     
 
 
@@ -190,21 +273,22 @@ def main():
     # # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
 
 
-    HW1_str_1 = 'TGATGA' # vertical
-    HW_lst_1 = [c for c in HW1_str_1]
-    HW1_str_2 = 'TTACTGC' # horizontal
-    HW_lst_2 = [c for c in HW1_str_2]
-    print(HW_lst_2)
+    
 
+    x = 'TTACTGC' # horizontal
+    y = 'TGATGA' # vertical
     
     sub_mat = [[4, -2, 1, -2], [-2, 4, -2, 1], [1, -2, 4, -2], [-2, 1, -2, 4]]
     sub_mat = init_sub_mat('ACGT', sub_mat)
 
-    mat = init_penalty_mat(HW1_str_2, HW1_str_1, gap_penalty=-5, align_type='semiglobal')
-    mat = align_with_sub(mat, HW1_str_2, HW1_str_1, sub_mat, penalty=-5, align_type='semiglobal')
+    mat = init_penalty_mat(x, y, gap_penalty=-5, align_type='semiglobal')
+    mat = align_with_sub(mat, x, y, sub_mat, penalty=-5, align_type='semiglobal')
     pprint(mat)
-    print(semi_traceback_start(mat))
-  
+    print(local_traceback_start(mat))
+    print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
+
+    # works for global but not semiglobal or local
+    # print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
 
 if __name__ == "__main__":
     main()
