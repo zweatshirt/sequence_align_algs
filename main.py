@@ -1,5 +1,7 @@
 import sys
 import csv
+import seaborn as sns
+import numpy as np
 # Author: Zachery Linscott
 # 9/2/2024
 # Global, local, and semiglobal sequence alignment project.
@@ -127,62 +129,81 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type='global'):
     return mat
 
 
-def opt_align(mat, i=None, j=None, x='', y='', x_aligned=[], y_aligned=[], align_type='global', iter=0):
+def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x_aligned=[], y_aligned=[], align_type='global', iter=0):
     # fix to recursively go over values with the d, v, h (not gap penalty vals itself)
     
     if iter == 0:
         if align_type == 'global':
             i = len(x)
             j = len(y)
-        if align_type == 'semiglobal':
+
+        if align_type == 'semiglobal': # semiglobal not working at all
             i, j = semi_traceback_start(mat) # test this case
+
         if align_type == 'local':
             i, j = local_traceback_start(mat)
+            
         mat=[row[1:] for row in mat[1:]]
+        first_row = mat[0]
+        first_col = [row[0] for row in mat]
 
     if i == 0 and j == 0:
 
-        # May or may not work for multiple cases, needs to be tested further
-        if align_type == 'local' or align_type == 'semiglobal':
-            while x_aligned[-1] == '_' or y_aligned[-1] == '_':
-                x_aligned = x_aligned[:-1]
-                y_aligned = y_aligned[:-1]
+        # # May or may not work for multiple cases, needs to be tested further
+        # if align_type == 'local':
+        #     # stops when the score is 0 and check the value at i, j itself
+        #     while x_aligned[-1] == '_' or y_aligned[-1] == '_':
+        #         x_aligned = x_aligned[:-1]
+        #         y_aligned = y_aligned[:-1]
+
+        # end when any of the sequences are aligned in the case of semiglobal
 
         print(x_aligned, y_aligned)
         # base case works for global
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
     
-
     if i == 0 and j > 0:
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
 
     if j == 0 and i > 0:
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
-        return opt_align(mat, i - 1, j, x, y, x_aligned, y_aligned, align_type, iter + 1)
-
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+    
     elem = mat[i - 1][j - 1]
-    # add both chars
+
+    # local alignment case
+    if elem[0] == 0 and align_type == 'local':
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+    
+    # semiglobal case NOT WORKING
+    if (elem in first_row or elem in first_col) and align_type == 'semiglobal':
+        x_aligned.append(x[i - 1])
+        y_aligned.append(y[j - 1])
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+
     if i > 0 and j > 0 and 'd' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i - 1, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+    
     if i > 0 and 'h' in elem[1]:
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i, j - 1, x, y, x_aligned, y_aligned, align_type, iter + 1)
-
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+    
     if j > 0 and 'v' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
-        return opt_align(mat, i - 1, j, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
 
+# check for the highest value in the entire matrix
 def local_traceback_start(mat):
     max_elem = 0
-    max_ij = []
+    max_ij = None
     for i in range(len(mat)):
         for j in range(i):
             if isinstance(mat[i][j], list):
@@ -191,7 +212,8 @@ def local_traceback_start(mat):
 
             if elem > max_elem:
                 max_elem = elem
-                max_ij = [i, j]
+                max_ij = (i, j)
+            print('max ij is{}', max_ij)
     return max_ij
 
 # returns start location for semiglobal matrix backtracing
@@ -200,10 +222,7 @@ def local_traceback_start(mat):
 def semi_traceback_start(mat):
 
     # initialize optimum val and optimum val idx to 0
-    end_col_opt = 0
-    end_row_opt = 0
-    end_row_opt_idx = 0
-    end_col_opt_idx = 0
+    end_col_opt, end_row_opt, end_col_opt_idx, end_col_opt_idx = 0, 0, 0, 0
 
     # grab last row and column from mat
     last_col = [row[-1] for row in mat[1:]]
@@ -231,16 +250,13 @@ def semi_traceback_start(mat):
 
     # if the max is from the last column return the relative i,jth idx
     if max_of_row_col == last_col[end_col_opt_idx][0]:
-        print("Last col has opt at i: {} j: {}".format(end_col_opt_idx, len(mat[0])))
-        return [end_col_opt_idx, len(mat[0])] # i, j pair
+        # return [end_col_opt_idx, len(mat[0]) - 1] # i, j pair
+        return [len(mat) - 1, end_col_opt_idx]
     
     # if the max is from the last row return the relative i,jth idx
     if max_of_row_col == last_row[end_row_opt_idx][0]:
-        print("Last row has opt at i: {} j: {}".format(len(mat) -1, end_row_opt_idx))
-        return (len(mat) - 1, end_row_opt_idx) # i, j pair
-    
-
-
+        # return (len(mat) - 1, end_row_opt_idx) # i, j pair
+        return [end_row_opt_idx, len(mat[0]) - 1]
 
 def main():
     # align_types = ["global", "local", "semiglobal", "affine"]
@@ -272,9 +288,6 @@ def main():
     # print(seq1, seq2, sub_mat)
     # # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
 
-
-    
-
     x = 'TTACTGC' # horizontal
     y = 'TGATGA' # vertical
     
@@ -284,11 +297,11 @@ def main():
     mat = init_penalty_mat(x, y, gap_penalty=-5, align_type='semiglobal')
     mat = align_with_sub(mat, x, y, sub_mat, penalty=-5, align_type='semiglobal')
     pprint(mat)
-    print(local_traceback_start(mat))
     print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
 
     # works for global but not semiglobal or local
     # print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
+    # sns.heatmap(mat)
 
 if __name__ == "__main__":
     main()
