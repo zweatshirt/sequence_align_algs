@@ -15,14 +15,11 @@ from constants import G, SG, L
 def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
     # grab characters of the sub matrix for accessing later
     sub_mat_chars = sub_mat.pop(0)
-    print(sub_mat_chars)
-    print(sub_mat)
 
     for i in range(len(sub_mat)):
         for j in range(i):
             sub_mat[i][j] = int(sub_mat[i][j])
 
-    print(mat)
     for i in range(1, len(x) + 1):
         for j in range(1, len(y) + 1):
 
