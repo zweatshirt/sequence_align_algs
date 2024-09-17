@@ -142,23 +142,19 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
 
         if align_type == 'local':
             i, j = local_traceback_start(mat)
-            
-        mat=[row[1:] for row in mat[1:]]
-        first_row = mat[0]
-        first_col = [row[0] for row in mat]
+        
+        if align_type == 'global' or align_type == 'semiglobal':
+            mat=[row[1:] for row in mat[1:]]
+
+        if align_type == 'semiglobal':
+            first_row = mat[0]
+            first_col = [row[0] for row in mat]
 
     if i == 0 and j == 0:
-
-        # # May or may not work for multiple cases, needs to be tested further
         # if align_type == 'local':
-        #     # stops when the score is 0 and check the value at i, j itself
-        #     while x_aligned[-1] == '_' or y_aligned[-1] == '_':
-        #         x_aligned = x_aligned[:-1]
-        #         y_aligned = y_aligned[:-1]
+        #     x_aligned.append(x[i - 1])
+        #     y_aligned.append(y[j - 1])
 
-        # end when any of the sequences are aligned in the case of semiglobal
-
-        print(x_aligned, y_aligned)
         # base case works for global
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
     
@@ -173,13 +169,22 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
         return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
     elem = mat[i - 1][j - 1]
-
+    print(elem)
     # local alignment case
-    if elem[0] == 0 and align_type == 'local':
+    if isinstance(elem, list): local_elem = elem[0]
+    else: local_elem = elem
+    if align_type == 'local' and local_elem == 0:
+        print('in local case')
+        # while x_aligned[-1] == '_' or y_aligned[-1] == '_':
+        #     x_aligned = x_aligned[1:]
+        #     y_aligned = y_aligned[1:]
+        x_aligned.append(x[i - 1])
+        y_aligned.append(y[j - 1])
+
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
     
-    # semiglobal case NOT WORKING
-    if (elem in first_row or elem in first_col) and align_type == 'semiglobal':
+    # semiglobal case
+    if align_type == 'semiglobal' and (elem in first_row or elem in first_col):
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
@@ -199,6 +204,60 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
         y_aligned.append('_')
         return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
+
+def opt_align_local(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x_aligned=[], y_aligned=[], iter=0):
+    # fix to recursively go over values with the d, v, h (not gap penalty vals itself)
+    
+    if iter == 0:
+        i, j = local_traceback_start(mat)
+
+    # if i == 0 and j == 0:
+    #     if align_type == 'local':
+    #         while x_aligned[len(x_aligned) - 1] == '_' or y_aligned[len(y_aligned) - 1] == '_':
+    #             x_aligned = x_aligned[1:]
+    #             y_aligned = y_aligned[1:]
+
+        # base case works for global
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+    
+    if i == 0 and j > 0:
+        x_aligned.append('_')
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, iter + 1)
+
+    if j == 0 and i > 0:
+        x_aligned.append(x[i - 1])
+        y_aligned.append('_')
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, iter + 1)
+    
+    elem = mat[i - 1][j - 1]
+    print(elem)
+    # local alignment case
+    if elem[0] == 0:
+        print('in local case')
+        while x_aligned[-1] == '_' or y_aligned[-1] == '_':
+            x_aligned = x_aligned[1:]
+            y_aligned = y_aligned[1:]
+
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+    
+    # semiglobal case
+
+    if i > 0 and j > 0 and 'd' in elem[1]:
+        x_aligned.append(x[i - 1])
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, iter + 1)
+    
+    if i > 0 and 'h' in elem[1]:
+        x_aligned.append('_')
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, iter + 1)
+    
+    if j > 0 and 'v' in elem[1]:
+        x_aligned.append(x[i - 1])
+        y_aligned.append('_')
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, iter + 1)
+
 
 # check for the highest value in the entire matrix
 def local_traceback_start(mat):
@@ -294,10 +353,10 @@ def main():
     sub_mat = [[4, -2, 1, -2], [-2, 4, -2, 1], [1, -2, 4, -2], [-2, 1, -2, 4]]
     sub_mat = init_sub_mat('ACGT', sub_mat)
 
-    mat = init_penalty_mat(x, y, gap_penalty=-5, align_type='semiglobal')
-    mat = align_with_sub(mat, x, y, sub_mat, penalty=-5, align_type='semiglobal')
+    mat = init_penalty_mat(x, y, gap_penalty=-5, align_type='local')
+    mat = align_with_sub(mat, x, y, sub_mat, penalty=-5, align_type='local')
     pprint(mat)
-    print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
+    print(opt_align(mat, x=x, y=y, align_type='local'))
 
     # works for global but not semiglobal or local
     # print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
