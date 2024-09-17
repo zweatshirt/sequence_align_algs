@@ -15,7 +15,14 @@ from constants import G, SG, L
 def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
     # grab characters of the sub matrix for accessing later
     sub_mat_chars = sub_mat.pop(0)
+    print(sub_mat_chars)
+    print(sub_mat)
 
+    for i in range(len(sub_mat)):
+        for j in range(i):
+            sub_mat[i][j] = int(sub_mat[i][j])
+
+    print(mat)
     for i in range(1, len(x) + 1):
         for j in range(1, len(y) + 1):
 
@@ -112,7 +119,6 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
         return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
     elem = mat[i - 1][j - 1]
-    print(elem)
 
     # local alignment case
     if isinstance(elem, list): local_elem = elem[0]
@@ -157,7 +163,6 @@ def local_traceback_start(mat):
             if elem > max_elem:
                 max_elem = elem
                 max_ij = (i, j)
-            print('max ij is{}', max_ij)
     return max_ij
 
 
@@ -187,8 +192,8 @@ def semi_traceback_start(mat):
 
     # just a print statement because I was curious.
     # True in the case of mat[n][m] being the opt, or if they happen to match
-    if end_col_opt == end_row_opt:
-        print("Max val of last row is the same as the max val of the last col: {}".format(end_col_opt))
+    # if end_col_opt == end_row_opt:
+    #     print("Max val of last row is the same as the max val of the last col: {}".format(end_col_opt))
 
     # get max of max of last row and max of last column
     max_of_row_col = max(end_col_opt, end_row_opt)

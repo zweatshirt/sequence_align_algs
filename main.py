@@ -1,11 +1,10 @@
 import sys
 import csv
-import seaborn as sns
-import numpy as np
+import os.path
 from constants import G, SG, L, A, SEQ_DIR, SUBS_DIR
 from mat_init import init_penalty_mat, init_sub_mat
 from align import align_with_sub, opt_align
-
+from etc import pprint
 
 # Author: Zachery Linscott
 # 9/2/2024
@@ -21,19 +20,25 @@ def main():
     seq_file1 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the first sequence file (e.g. sequenceA1.txt): ")
     )
+    assert(os.path.exists(seq_file1))
     seq_file2 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the second sequence file (e.g. sequenceA2.txt): ")
     )
+    assert(os.path.exists(seq_file2))
     sub_mat_f = "{}/{}".format(
         SUBS_DIR, input("Enter the name of the submatrix file (e.g. AAnucleoPP.txt): ")
     )
+    assert(os.path.exists(sub_mat_f))
 
     at = input(
         "Enter the alignment type (e.g. {}, {}, {}, or {}): "
         .format(G, L, SG, A)
     )
+    assert(at in [G, L, SG, A])
 
-    gp = input("Enter the gap penalty: ")
+    gp = input("Enter the gap penalty as a positive integer (it will be converted to negative): ")
+    assert(gp.isnumeric())
+    gp = -1 * int(gp) 
 
     with open(seq_file1, 'r', encoding='utf-8') as f1:
         seq1 = f1.readlines()[1]
@@ -48,7 +53,10 @@ def main():
 
     mat = init_penalty_mat(seq1, seq2, gap_penalty=gp, align_type=at)
     mat = align_with_sub(mat, seq1, seq2, sub_mat=sub_mat, penalty=gp, align_type=at)
-    print(opt_align(mat, x=seq1, y=seq2, align_type=at))
+
+    print('Optimally aligned sequences:\n' + '\n'.join(opt_align(mat, x=seq1, y=seq2, align_type=at)), end='\n\n')
+    print("Optimum alignment matrix:\n")
+    pprint(mat)
     # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
 
 
