@@ -84,40 +84,44 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
 # iter: what iteration in the recursion the func is at
 def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x_aligned=[], y_aligned=[], align_type=G, iter=0):
     
+    # add sum of opt alignment score
+
     if iter == 0:
-        if align_type == G:
+        if align_type == G: # global starting loc case
             i = len(x)
             j = len(y)
-
-        if align_type == SG: # semiglobal not working at all
+        if align_type == SG: # semiglobal starting loc case
             i, j = semi_traceback_start(mat) 
-
-        if align_type == L:
+        if align_type == L: # local starting loc case
             i, j = local_traceback_start(mat)
-        
-        if align_type == G or align_type == SG:
+
+        # this is simply due to the way I handle the matrix
+        # with global/semiglobal compared to local...
+        if align_type == G or align_type == SG: 
             mat=[row[1:] for row in mat[1:]]
 
+        # grab the first row and col in semiglobal case
         if align_type == SG:
             first_row = mat[0]
             first_col = [row[0] for row in mat]
 
-    if i == 0 and j == 0:
+
+    if i == 0 and j == 0: # base case, particularly common for global
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
     
-    if i == 0 and j > 0:
+    if i == 0 and j > 0: # in first row 
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
         return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
 
-    if j == 0 and i > 0:
+    if j == 0 and i > 0: # in first column
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
         return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
     elem = mat[i - 1][j - 1]
 
-    # local alignment case
+    # local alignment base case
     if isinstance(elem, list): local_elem = elem[0]
     else: local_elem = elem
     if align_type == L and local_elem == 0:
@@ -125,29 +129,35 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
         y_aligned.append(y[j - 1])
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
     
-    # semiglobal case
+    # semiglobal base case
     if align_type == SG and (elem in first_row or elem in first_col):
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
 
+    # if the move is diagonal
     if i > 0 and j > 0 and 'd' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
         return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
+    # if the move is horizontal
     if i > 0 and 'h' in elem[1]:
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
         return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
     
+    # if the move is vertical
     if j > 0 and 'v' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
         return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
 
 
-# check for the highest value in the entire matrix
+# this function check for the highest value in the entire matrix
+# and returns it as the starting loc for local traceback
+# parameter:
+# mat - m x n penalty matrix that has been populated with values
 def local_traceback_start(mat):
     max_elem = 0
     max_ij = None
@@ -164,6 +174,8 @@ def local_traceback_start(mat):
 
 
 # returns start location for semiglobal matrix backtracing
+# by checking the last row and last column of the 
+# populated penalty matrix
 # parameter:
 # mat - specifically an m x n penalty matrix that is semiglobal and already filled.
 def semi_traceback_start(mat):
