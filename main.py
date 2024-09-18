@@ -1,7 +1,6 @@
-import sys
 import csv
 import os.path
-from constants import G, SG, L, A, SEQ_DIR, SUBS_DIR
+from constants import G, SG, L, SEQ_DIR, SUBS_DIR
 from mat_init import init_penalty_mat, init_sub_mat
 from align import align_with_sub, opt_align
 from etc import pprint
@@ -34,14 +33,14 @@ def main():
 
     # alignment type
     at = input(
-        "Enter the alignment type (e.g. {}, {}, {}, or {}): "
-        .format(G, L, SG, A)
+        "Enter the alignment type (e.g. {}, {}, or {}): "
+        .format(G, L, SG)
     )
-    assert(at in [G, L, SG, A])
+    assert(at in [G, L, SG])
 
     # gap penalty
     gp = input("Enter the gap penalty as a positive integer (it will be converted to negative): ")
-    assert(gp.isnumeric() and gp > 0)
+    assert(gp.isnumeric() and int(gp) > 0)
     gp = -1 * int(gp) 
 
 

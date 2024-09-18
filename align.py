@@ -70,6 +70,7 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
     return mat
 
 
+# Score is not correct
 # recursive traceback algorithm that handles the 3 primary cases:
 # global, semigloba, local.
 # parameters:
@@ -82,10 +83,9 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
 #    x_aligned and y_aligned are reversed, so they need to be reversed upon final return
 # align_type: the align_type that we want to perform traceback for
 # iter: what iteration in the recursion the func is at
-def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x_aligned=[], y_aligned=[], align_type=G, iter=0):
+def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_aligned=[], y_aligned=[], align_type=G, iter=0, score=0):
     
     # add sum of opt alignment score
-
     if iter == 0:
         if align_type == G: # global starting loc case
             i = len(x)
@@ -94,7 +94,7 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
             i, j = semi_traceback_start(mat) 
         if align_type == L: # local starting loc case
             i, j = local_traceback_start(mat)
-
+        score = mat[i][j][0] if isinstance(mat[i][j], list) else mat[i][j]
         # this is simply due to the way I handle the matrix
         # with global/semiglobal compared to local...
         if align_type == G or align_type == SG: 
@@ -105,21 +105,22 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
             first_row = mat[0]
             first_col = [row[0] for row in mat]
 
-
     if i == 0 and j == 0: # base case, particularly common for global
-        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+        # score += (mat[i][j][0] if isinstance(mat[i][j], list) else mat[i][j])
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
     
     if i == 0 and j > 0: # in first row 
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
 
     if j == 0 and i > 0: # in first column
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
-        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
     
     elem = mat[i - 1][j - 1]
+    elem_score = elem[0] if isinstance(elem, list) else elem
 
     # local alignment base case
     if isinstance(elem, list): local_elem = elem[0]
@@ -127,31 +128,32 @@ def opt_align(mat, i=None, j=None, first_col=None, first_row=None, x='', y='', x
     if align_type == L and local_elem == 0:
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
-        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
     
     # semiglobal base case
     if align_type == SG and (elem in first_row or elem in first_col):
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
-        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned))]
+        score += (mat[i - 1][j - 1][0] if isinstance(mat[i - 1][j - 1], list) else mat[i - 1][j - 1])
+        return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
 
     # if the move is diagonal
     if i > 0 and j > 0 and 'd' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
     
     # if the move is horizontal
     if i > 0 and 'h' in elem[1]:
         x_aligned.append('_')
         y_aligned.append(y[j - 1])
-        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
     
     # if the move is vertical
     if j > 0 and 'v' in elem[1]:
         x_aligned.append(x[i - 1])
         y_aligned.append('_')
-        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1)
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
 
 
 # this function check for the highest value in the entire matrix
