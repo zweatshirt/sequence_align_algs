@@ -17,7 +17,7 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
     sub_mat_chars = sub_mat.pop(0)
     for i in range(len(sub_mat)):
         for j in range(i):
-            sub_mat[i][j] = int(sub_mat[i][j])
+            sub_mat[i][j] = float(sub_mat[i][j])
 
     for i in range(1, len(x) + 1):
         for j in range(1, len(y) + 1):
@@ -33,21 +33,21 @@ def align_with_sub(mat, x, y, sub_mat, penalty=-1, align_type=G):
             # find x and y chars in sub matrix to compute their match/sub value
             sub_mat_row_loc = sub_mat_chars.index(row_char)
             sub_mat_col_loc = sub_mat_chars.index(col_char)
-            sub_mat_score = int(sub_mat[sub_mat_row_loc][sub_mat_col_loc])
+            sub_mat_score = float(sub_mat[sub_mat_row_loc][sub_mat_col_loc])
             dir = '' # initalize string for direction of optimal choice
 
             # the matrix is initialized with 0s but later populated with lists
             # to store both opt value and opt direction string.
             # due to this, both cases have to be managed.
-            if isinstance(prev_ij, int):
-                diag_sub = prev_ij + sub_mat_score # [i-1,i-j] val + sub matrix val
-            else: diag_sub = prev_ij[0] + sub_mat_score
-            if isinstance(prev_row, int):            
-                vertical_move =  prev_row + penalty # [i - 1, j] val + penalty val
-            else: vertical_move = prev_row[0] + penalty
-            if isinstance(prev_col, int):
-                horiz_move = prev_col + penalty # [i, j - 1] val + penalty val
-            else: horiz_move = prev_col[0] + penalty
+            if isinstance(prev_ij, list):
+                diag_sub = float(prev_ij[0]) + sub_mat_score # [i-1,i-j] val + sub matrix val
+            else: diag_sub = float(prev_ij) + sub_mat_score
+            if isinstance(prev_row, list):            
+                vertical_move =  float(prev_row[0]) + penalty # [i - 1, j] val + penalty val
+            else: vertical_move = float(prev_row) + penalty
+            if isinstance(prev_col, list):
+                horiz_move = float(prev_col[0]) + penalty # [i, j - 1] val + penalty val
+            else: horiz_move = float(prev_col) + penalty
 
             # Note to self: refactor if statements here
             # the algorithm is the same for global and semiglobal here

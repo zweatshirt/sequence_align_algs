@@ -43,7 +43,7 @@ def main():
     gp = input("Enter the gap penalty: ")
 
     try:
-        gp = int(gp)
+        gp = float(gp)
     except:
         if gp[0] == '-' and gp[1:].isnumeric():
             gp = -int(gp[1:])
