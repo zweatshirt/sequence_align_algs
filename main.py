@@ -15,34 +15,34 @@ def main():
     seq2 = []
     sub_mat = []
 
-    # input1, input2 = sys.argv[1], sys.argv[2]
     # sequence files input
     seq_file1 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the first sequence file (e.g. sequenceA1.txt): ")
     )
-    assert(os.path.exists(seq_file1))
+    assert os.path.exists(seq_file1), "{} doesn't exist.".format(seq_file1) 
     seq_file2 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the second sequence file (e.g. sequenceA2.txt): ")
     )
-    assert(os.path.exists(seq_file2))
+    assert os.path.exists(seq_file2), "{} doesn't exist.".format(seq_file2)
+
     # sub matrix file input
     sub_mat_f = "{}/{}".format(
         SUBS_DIR, input("Enter the name of the submatrix file (e.g. AAnucleoPP.txt): ")
     )
-    assert(os.path.exists(sub_mat_f))
+    assert os.path.exists(sub_mat_f), "{} doesn't exist.".format(sub_mat_f)
 
     # alignment type
     at = input(
         "Enter the alignment type (e.g. {}, {}, or {}): "
         .format(G, L, SG)
     )
-    assert(at in [G, L, SG])
+    assert at.casefold() in [G, L, SG], 'Mispelled the alignment type.'
+    at = at.lower()
 
     # gap penalty
-    gp = input("Enter the gap penalty as a positive integer (it will be converted to negative): ")
-    assert(gp.isnumeric() and int(gp) > 0)
-    gp = -1 * int(gp) 
-
+    gp = input("Enter the gap penalty: ")
+    assert gp.isnumeric(), 'The input must be a numerical value.'
+    if int(gp) > 0: gp = -1 * int(gp) 
 
     # read files
     with open(seq_file1, 'r', encoding='utf-8') as f1:
@@ -56,14 +56,21 @@ def main():
         [sub_mat.append(row) for row in read]
         sub_mat.pop(0) #discard first row
 
+    # weird edgecase for the B sequence files
+    if '\n' in seq1: seq1 = seq1.replace('\n', '')
+    if '\n' in seq2: seq2 = seq2.replace('\n', '')
+
     # initialize an empty penalty matrix given the gap penalty
     mat = init_penalty_mat(seq1, seq2, gap_penalty=gp, align_type=at)
     # populate matrix given the sub matrix read from the file
     mat = align_with_sub(mat, seq1, seq2, sub_mat=sub_mat, penalty=gp, align_type=at)
 
-    print('Optimally aligned sequences:\n' + '\n'.join(opt_align(mat, x=seq1, y=seq2, align_type=at)), end='\n\n')
+    opt_seq1, opt_seq2, score = opt_align(mat, x=seq1, y=seq2, align_type=at)
+
+    print('\nAlignment type: {}'.format(at.capitalize()))
+    print('\nOptimally aligned sequences:\n\tSequence 1: {}\n\tSequence 2: {}\n\tScore: {}\n'.format(opt_seq1, opt_seq2, score))
     print("Optimum alignment matrix:\n")
-    pprint(mat)
+    pprint(mat, seq1, seq2)
     # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
 
     # HOMEWORK CASE
