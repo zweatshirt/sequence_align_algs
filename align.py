@@ -114,16 +114,6 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
         y_aligned.append(y[j - 1])
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
 
-    if i == 0 and j > 0: # in first row 
-        x_aligned.append('_')
-        y_aligned.append(y[j - 1])
-        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
-
-    if j == 0 and i > 0: # in first column
-        x_aligned.append(x[i - 1])
-        y_aligned.append('_')
-        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
-    
     elem = mat[i - 1][j - 1]
 
     # local alignment base case
@@ -133,6 +123,16 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
+
+    if i == 0 and j > 0: # in first row 
+        x_aligned.append('_')
+        y_aligned.append(y[j - 1])
+        return opt_align(mat, i, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
+
+    if j == 0 and i > 0: # in first column
+        x_aligned.append(x[i - 1])
+        y_aligned.append('_')
+        return opt_align(mat, i - 1, j, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
     
 
     # if the move is diagonal

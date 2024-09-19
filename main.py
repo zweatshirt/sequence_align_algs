@@ -41,8 +41,14 @@ def main():
 
     # gap penalty
     gp = input("Enter the gap penalty: ")
-    assert gp.isnumeric(), 'The input must be a numerical value.'
-    if int(gp) > 0: gp = -1 * int(gp) 
+
+    try:
+        gp = int(gp)
+    except:
+        if gp[0] == '-' and gp[1:].isnumeric():
+            gp = -int(gp[1:])
+        assert gp.isnumeric(), 'The input must be a numerical value.'
+    if gp > 0: gp = -gp 
 
     # read files
     with open(seq_file1, 'r', encoding='utf-8') as f1:
@@ -67,27 +73,10 @@ def main():
 
     opt_seq1, opt_seq2, score = opt_align(mat, x=seq1, y=seq2, align_type=at)
 
-    print('\nAlignment type: {}'.format(at.capitalize()))
+    print('\n\nAlignment type: {}\nGap penalty: {}'.format(at.capitalize(), str(gp)))
     print('\nOptimally aligned sequences:\n\tSequence 1: {}\n\tSequence 2: {}\n\tScore: {}\n'.format(opt_seq1, opt_seq2, score))
     print("Optimum alignment matrix:\n")
-    pprint(mat, seq1, seq2)
-    # Output alignment of the two sequences, the OPT matrix, the optimal alignment score
-
-    # HOMEWORK CASE
-    # x = 'TTACTGC' # horizontal
-    # y = 'TGATGA' # vertical
-    
-    # sub_mat = [[4, -2, 1, -2], [-2, 4, -2, 1], [1, -2, 4, -2], [-2, 1, -2, 4]]
-    # sub_mat = init_sub_mat('ACGT', sub_mat)
-
-    # mat = init_penalty_mat(x, y, gap_penalty=-5, align_type=L)
-    # mat = align_with_sub(mat, x, y, sub_mat, penalty=-5, align_type=L)
-    # pprint(mat)
-    # print(opt_align(mat, x=x, y=y, align_type=L))
-
-    # works for global but not semiglobal or local
-    # print(opt_align(mat, x=x, y=y, align_type='semiglobal'))
-    # sns.heatmap(mat)
+    pprint(mat)
 
 if __name__ == "__main__":
     main()
