@@ -46,7 +46,7 @@ def main():
         gp = float(gp)
     except:
         if gp[0] == '-' and gp[1:].isnumeric():
-            gp = -int(gp[1:])
+            gp = -float(gp[1:])
         assert gp.isnumeric(), 'The input must be a numerical value.'
     if gp > 0: gp = -gp 
 
