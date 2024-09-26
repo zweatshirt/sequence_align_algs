@@ -92,14 +92,17 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
             score = mat[len(mat) - 1][len(mat[0]) - 1]
             if isinstance(score, list): score = score[0]
         if align_type == SG: # semiglobal starting loc case
-            i, j, score = semi_traceback_start(mat) 
+            # mat = [row[1:] for row in mat[1:]]
+            i, j, score = semi_traceback_start(mat)
+            print(i, j)
+
         if align_type == L: # local starting loc case
             i, j, score = local_traceback_start(mat)
         # this is simply due to the way I handle the matrix
         # with global/semiglobal compared to local...
         if align_type == G or align_type == SG: 
-            mat=[row[1:] for row in mat[1:]]
-
+            mat = [row[1:] for row in mat[1:]]
+          
         # grab the first row and col in semiglobal case
         if align_type == SG:
             first_row = mat[0]
@@ -108,14 +111,13 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
     if i == 0 and j == 0: # base case, particularly common for global
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
     
+    print(i, j, iter)
     # semiglobal base case
-    if align_type == SG and (i == 0 or j == 0):
-        x_aligned.append(x[i - 1])
-        y_aligned.append(y[j - 1])
+    if (align_type == SG and i == 0) or (align_type == SG and j == 0):
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
 
     elem = mat[i - 1][j - 1]
-
+  
     # local alignment base case
     if isinstance(elem, list): local_elem = elem[0]
     else: local_elem = elem
@@ -137,6 +139,8 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
 
     # if the move is diagonal
     if i > 0 and j > 0 and 'd' in elem[1]:
+        if align_type == SG and (i == 0 or j == 0):
+            return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
         x_aligned.append(x[i - 1])
         y_aligned.append(y[j - 1])
         return opt_align(mat, i - 1, j - 1, first_col, first_row, x, y, x_aligned, y_aligned, align_type, iter + 1, score)
@@ -170,7 +174,6 @@ def local_traceback_start(mat):
             if elem > max_elem:
                 max_elem = elem
                 max_ij = (i, j)
-                print(max_elem)
 
     return [val for val in max_ij] + [max_elem]
 
@@ -183,24 +186,31 @@ def local_traceback_start(mat):
 def semi_traceback_start(mat):
 
     # initialize optimum val and optimum val idx to 0
-    end_col_opt, end_row_opt, end_col_opt_idx, end_col_opt_idx = 0, 0, 0, 0
+    end_col_opt, end_row_opt = float('-inf'), float('-inf')
+    end_row_opt_idx, end_col_opt_idx = 0, 0
 
     # grab last row and column from mat
     last_col = [row[-1] for row in mat[1:]]
     last_row = mat[-1][1:]
+    print(last_row)
 
     # find optimum value in last column
-    for idx, i in enumerate(last_col): 
-        if i[0] > end_col_opt:
-            end_col_opt = i[0]
-            end_col_opt_idx = idx
+    for idx, i in enumerate(last_row): 
+        if isinstance(i, list): i = i[0]
+        if i > end_row_opt:
+            end_row_opt = i
+            end_row_opt_idx = idx
+            print(i)
+            print(idx)
 
     # find optimum value in last row
-    for idx, j in enumerate(last_row):
-        if j[0] > end_row_opt:
-            end_row_opt = j[0]
-            end_row_opt_idx = idx
-
+    for idx, j in enumerate(last_col):
+        if isinstance(j, list): j = j[0]
+        if j > end_col_opt:
+            end_col_opt = j
+            end_col_opt_idx = idx
+            print("in j loop", idx, end_col_opt_idx)
+    
     # just a print statement because I was curious.
     # True in the case of mat[n][m] being the opt, or if they happen to match
     # if end_col_opt == end_row_opt:
@@ -211,10 +221,17 @@ def semi_traceback_start(mat):
 
     # if the max is from the last column return the relative i,jth idx
     if max_of_row_col == last_col[end_col_opt_idx][0]:
+        print(f"val in last col with end_col_opt_idx: {end_col_opt_idx} len of mat -1 is: {len(mat) - 1}")
         # return [end_col_opt_idx, len(mat[0]) - 1] # i, j pair
-        return [len(mat) - 1, end_col_opt_idx, max_of_row_col]
+        # return [len(mat) - 1, end_col_opt_idx + 1, max_of_row_col]
+
+        return [end_col_opt_idx + 1, len(mat[0]) - 1, max_of_row_col]
+
     
     # if the max is from the last row return the relative i,jth idx
     if max_of_row_col == last_row[end_row_opt_idx][0]:
         # return (len(mat) - 1, end_row_opt_idx) # i, j pair
-        return [end_row_opt_idx, len(mat[0]) - 1, max_of_row_col]
+        # return [end_row_opt_idx + 1, len(mat[0]) - 1, max_of_row_col]
+        print(last_row)
+        print(f"val in last row with end_row_opt_idx: {end_row_opt_idx} len of mat -1 is: {len(mat) - 1}")
+        return [len(mat) - 1, end_row_opt_idx, max_of_row_col]

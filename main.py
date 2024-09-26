@@ -19,17 +19,17 @@ def main():
     seq_file1 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the first sequence file (e.g. sequenceA1.txt): ")
     )
-    assert os.path.exists(seq_file1), "{} doesn't exist.".format(seq_file1) 
+    assert os.path.exists(seq_file1), f"{seq_file1} doesn't exist."
     seq_file2 = "{}/{}".format(
         SEQ_DIR, input("Enter the name of the second sequence file (e.g. sequenceA2.txt): ")
     )
-    assert os.path.exists(seq_file2), "{} doesn't exist.".format(seq_file2)
+    assert os.path.exists(seq_file2), f"{seq_file2} doesn't exist."
 
     # sub matrix file input
     sub_mat_f = "{}/{}".format(
         SUBS_DIR, input("Enter the name of the submatrix file (e.g. AAnucleoPP.txt): ")
     )
-    assert os.path.exists(sub_mat_f), "{} doesn't exist.".format(sub_mat_f)
+    assert os.path.exists(sub_mat_f), f"{sub_mat_f} doesn't exist."
 
     # alignment type
     at = input(
@@ -73,8 +73,13 @@ def main():
 
     opt_seq1, opt_seq2, score = opt_align(mat, x=seq1, y=seq2, align_type=at)
 
+    print(f'Original sequences:\n\t{seq1}\n\t{seq2}')
     print('\n\nAlignment type: {}\nGap penalty: {}'.format(at.capitalize(), str(gp)))
-    print('\nOptimally aligned sequences:\n\tSequence 1: {}\n\tSequence 2: {}\n\tScore: {}\n'.format(opt_seq1, opt_seq2, score))
+
+    if (len(opt_seq1) == 0 and len(opt_seq2) == 0):
+        print('\nNo optimal alignment for the sequences (all gaps)\nScore: {}\n'.format(score))
+    else:
+        print('\nOptimally aligned sequences:\n\t{}\n\t{}\n\tScore: {}\n'.format(opt_seq1, opt_seq2, score))
     print("Optimum alignment matrix:\n")
     pprint(mat)
 
