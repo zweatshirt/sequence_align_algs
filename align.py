@@ -94,7 +94,7 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
         if align_type == SG: # semiglobal starting loc case
             # mat = [row[1:] for row in mat[1:]]
             i, j, score = semi_traceback_start(mat)
-            print(i, j)
+    
 
         if align_type == L: # local starting loc case
             i, j, score = local_traceback_start(mat)
@@ -111,7 +111,6 @@ def opt_align(mat, i=0, j=0, first_col=None, first_row=None, x='', y='', x_align
     if i == 0 and j == 0: # base case, particularly common for global
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
     
-    print(i, j, iter)
     # semiglobal base case
     if (align_type == SG and i == 0) or (align_type == SG and j == 0):
         return [''.join(reversed(x_aligned)), ''.join(reversed(y_aligned)), str(score)]
@@ -192,7 +191,7 @@ def semi_traceback_start(mat):
     # grab last row and column from mat
     last_col = [row[-1] for row in mat[1:]]
     last_row = mat[-1][1:]
-    print(last_row)
+ 
 
     # find optimum value in last column
     for idx, i in enumerate(last_row): 
@@ -200,8 +199,7 @@ def semi_traceback_start(mat):
         if i > end_row_opt:
             end_row_opt = i
             end_row_opt_idx = idx
-            print(i)
-            print(idx)
+    
 
     # find optimum value in last row
     for idx, j in enumerate(last_col):
@@ -209,7 +207,7 @@ def semi_traceback_start(mat):
         if j > end_col_opt:
             end_col_opt = j
             end_col_opt_idx = idx
-            print("in j loop", idx, end_col_opt_idx)
+
     
     # just a print statement because I was curious.
     # True in the case of mat[n][m] being the opt, or if they happen to match
@@ -221,7 +219,7 @@ def semi_traceback_start(mat):
 
     # if the max is from the last column return the relative i,jth idx
     if max_of_row_col == last_col[end_col_opt_idx][0]:
-        print(f"val in last col with end_col_opt_idx: {end_col_opt_idx} len of mat -1 is: {len(mat) - 1}")
+
         # return [end_col_opt_idx, len(mat[0]) - 1] # i, j pair
         # return [len(mat) - 1, end_col_opt_idx + 1, max_of_row_col]
 
@@ -232,6 +230,4 @@ def semi_traceback_start(mat):
     if max_of_row_col == last_row[end_row_opt_idx][0]:
         # return (len(mat) - 1, end_row_opt_idx) # i, j pair
         # return [end_row_opt_idx + 1, len(mat[0]) - 1, max_of_row_col]
-        print(last_row)
-        print(f"val in last row with end_row_opt_idx: {end_row_opt_idx} len of mat -1 is: {len(mat) - 1}")
         return [len(mat) - 1, end_row_opt_idx, max_of_row_col]

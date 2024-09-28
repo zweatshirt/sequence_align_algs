@@ -74,7 +74,7 @@ def main():
     opt_seq1, opt_seq2, score = opt_align(mat, x=seq1, y=seq2, align_type=at)
 
     print(f'Original sequences:\n\t{seq1}\n\t{seq2}')
-    print('\n\nAlignment type: {}\nGap penalty: {}'.format(at.capitalize(), str(gp)))
+    print('\nAlignment type: {}\nGap penalty: {}'.format(at.capitalize(), str(gp)))
 
     if (len(opt_seq1) == 0 and len(opt_seq2) == 0):
         print('\nNo optimal alignment for the sequences (all gaps)\nScore: {}\n'.format(score))
