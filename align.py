@@ -230,4 +230,4 @@ def semi_traceback_start(mat):
     if max_of_row_col == last_row[end_row_opt_idx][0]:
         # return (len(mat) - 1, end_row_opt_idx) # i, j pair
         # return [end_row_opt_idx + 1, len(mat[0]) - 1, max_of_row_col]
-        return [len(mat) - 1, end_row_opt_idx, max_of_row_col]
+        return [len(mat) - 1, end_row_opt_idx + 1, max_of_row_col]
