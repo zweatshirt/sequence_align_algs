@@ -1,7 +1,9 @@
 # Zachery Linscott's CS476 Project 1
+
 ## Note:
 - To test sequence text files, please ensure that they are placed in the P1AASeqs folder and follow the typical formatting of all other files that are there (fafsa).
 - Likewise, any substitution matrix files need to go in the P1SubMatrices folder.
+- I believe the csv library for Python is built-in, however, if it isn't you may need to install it via pip or conda.
 
 ## Running the program:
 1. When in the project directory, simply run the command `python3 main.py`
