@@ -6,7 +6,7 @@
 - I believe the csv library for Python is built-in, however, if it isn't you may need to install it via pip or conda.
 
 ## Running the program:
-1. When in the project directory, simply run the command `python3 main.py`
+1. When in the project directory, simply run the command `python3 main.py` or `python main.py` depending on your Python install.
 2. Input the file name of the first sequence file (assuming it has been placed in the P1AASeqs folder). Hit enter.
 3. Input the file name of the second sequence file (assuming it has been placed in the P1AASeqs folder). Hit enter.
 4. Input the file name of the submatrix (assuming it has been placed in the P1SubMatrices folder). Hit enter.
