@@ -1,5 +1,8 @@
 # Zachery Linscott's CS476 Project 1
 
+Local, global, and semiglobal sequence alignment algorithms (Needleman-Wunsch and Smith-Waterman).
+I hope to convert these into C and optimize them.
+
 ## Note:
 - To test sequence text files, please ensure that they are placed in the P1AASeqs folder and follow the typical formatting of all other files that are there (fafsa).
 - Likewise, any substitution matrix files need to go in the P1SubMatrices folder.
